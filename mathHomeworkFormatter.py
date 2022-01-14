@@ -40,15 +40,25 @@ def main():
 		print(err)
 
 	for assignment in document:
-		assignment = assignment.get('tableCells')[0].get('content')
-		hw_string = construct_hw_string(assignment)
+		assignment = assignment.get('tableCells')
+		assignment_title = assignment[0].get('content')
+		hw_string = construct_hw_string(assignment_title)
 		valid_numbers = construct_valid_numbers(hw_string)
 		valid_numbers = filter_valid_numbers(valid_numbers, hw_string)
 
-		print(valid_numbers)
+		# print(valid_numbers) # DEBUG
+
 		if REQUESTED_HW in valid_numbers:
-			# print(hw_string)
-			1 + 1
+			assignment_pages = assignment[3].get('content')
+			assignment_problems = assignment[4].get('content')
+			pages = get_pages(assignment_pages)
+			problems = get_problems(assignment_problems)
+			due_date = problems[1]
+			problems = problems[0]
+			
+			print(due_date)
+			print(pages)
+			print(problems)
 
 def auth():
 	creds = None
@@ -126,6 +136,41 @@ def filter_valid_numbers(valid_numbers: list[str], hw_string: str):
 			valid_numbers.append(hw_string[index:].strip())
 	
 	return valid_numbers
+
+def get_pages(assignment_pages):
+	pages = []
+
+	for page in assignment_pages:
+		page = page.get('paragraph').get('elements')[0].get('textRun').get('content')
+		if page == '\n':
+			continue
+
+		page = page.strip('\n')
+		page = page.strip()
+
+		pages.append(page)
+	
+	return pages
+
+def get_problems(assignment_problems):
+	due_date = ''
+	problems = []
+	# ToDo: account for images in Added Problems (a try catch might be the best way since the image won't have textRun)
+	for problem in assignment_problems:
+		with open('output.json', 'w') as path:
+			path.write(json.dumps(assignment_problems, indent=4))
+		problem = problem.get('paragraph').get('elements')[0].get('textRun').get('content')
+
+		if re.match(r'^do +mml', problem, re.I):
+				return [problems, due_date]
+
+		if (problem.lower().startswith('due')):
+			index = re.search(r"\d", problem).start()
+			due_date = problem[index:].strip('\n') + '/2022'
+		else:
+			problems.append(problem.strip('\n'))
+
+	return [problems, due_date]
 
 if __name__ == '__main__':
 	main()
