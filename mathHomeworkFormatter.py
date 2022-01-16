@@ -46,8 +46,6 @@ def main():
 		valid_numbers = construct_valid_numbers(hw_string)
 		valid_numbers = filter_valid_numbers(valid_numbers, hw_string)
 
-		# print(valid_numbers) # DEBUG
-
 		if REQUESTED_HW in valid_numbers:
 			assignment_pages = assignment[3].get('content')
 			assignment_problems = assignment[4].get('content')
@@ -56,9 +54,11 @@ def main():
 			due_date = problems[1]
 			problems = problems[0]
 			
+			print(hw_string)
 			print(due_date)
 			print(pages)
 			print(problems)
+			break
 
 def auth():
 	creds = None
@@ -155,18 +155,22 @@ def get_pages(assignment_pages):
 def get_problems(assignment_problems):
 	due_date = ''
 	problems = []
-	# ToDo: account for images in Added Problems (a try catch might be the best way since the image won't have textRun)
+
 	for problem in assignment_problems:
 		with open('output.json', 'w') as path:
-			path.write(json.dumps(assignment_problems, indent=4))
-		problem = problem.get('paragraph').get('elements')[0].get('textRun').get('content')
+			path.write(json.dumps(problem, indent=4))
+
+		problem = problem.get('paragraph').get('elements')[0]
+		if not 'textRun' in problem.keys():
+			return [problems, due_date]
+		problem = problem.get('textRun').get('content')
 
 		if re.match(r'^do +mml', problem, re.I):
-				return [problems, due_date]
+			return [problems, due_date]
 
 		if (problem.lower().startswith('due')):
 			index = re.search(r"\d", problem).start()
-			due_date = problem[index:].strip('\n') + '/2022'
+			due_date = problem[index:].strip('\n') + '/22'
 		else:
 			problems.append(problem.strip('\n'))
 
