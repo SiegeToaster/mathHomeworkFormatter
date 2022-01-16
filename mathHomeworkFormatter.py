@@ -14,7 +14,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/documents.readonly']
+SCOPES = ['https://www.googleapis.com/auth/documents']
 DOCUMENT_ID = '1p21l34ih6o_aiOtmaZTnJ-fuXvU9W6nY5ZMDDXGSrYQ'
 TOKEN_PATH = "token.json"
 
@@ -35,7 +35,21 @@ def main():
 		document = service.documents().get(documentId=DOCUMENT_ID).execute()
 		document = document.get('body').get('content')[4].get('table').get('tableRows')
 			# each index is a different assignment
-			
+					
+		test_thing = service.documents().get(documentId='165mIRq4syA7NC_nO68JdFFPzLVHQlKpZaW8_-Fmeaz8').execute()
+		test_thing = test_thing.get('body').get('content')[2].get('table').get('tableRows')[0].get('tableCells')
+
+		# test_thing = test_thing[0].get('content')[0].get('startIndex') # HW title start index
+		# test_thing = test_thing[0].get('content')[0].get('paragraph').get('elements')[0].get('textRun').get('content') # HW 'title'
+
+		# test_thing = test_thing[1].get('content')[0].get('startIndex') # Assigned problems start index
+		# test_thing = test_thing[1].get('content')[0].get('paragraph').get('elements')[0].get('textRun').get('content') # Assigned problems
+
+		# test_thing = test_thing[2].get('content')[0].get('startIndex') # Date start index
+		# test_thing = test_thing[2].get('content')[2].get('paragraph').get('elements')[0].get('textRun').get('content') # Date
+		with open('test.json', 'w') as path:
+			path.write(json.dumps(test_thing, indent=4))
+
 	except HttpError as err:
 		print(err)
 
