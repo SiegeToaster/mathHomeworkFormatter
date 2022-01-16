@@ -40,9 +40,6 @@ def main():
 		output = service.documents().get(documentId=TEMPLATE_ID).execute()
 		output = output.get('body').get('content')[2].get('table').get('tableRows')[0].get('tableCells')
 
-		with open('test.json', 'w') as path:
-			path.write(json.dumps(output, indent=4))
-
 	except HttpError as err:
 		print(err)
 
@@ -60,88 +57,15 @@ def main():
 			problems = get_problems(assignment_problems)
 			due_date = problems[1]
 			problems = problems[0]
-
+			assigned_problems_string = construct_assigned_problems_string(pages, problems)
 
 			print("HW " + hw_string)
 			print(due_date)
 			print(pages)
 			print(problems)
-			print('\n\n')
-
-			assigned_problems_string = ''
-			for i, page in enumerate(pages):
-				assigned_problems_string += page + ' '
-				if i >= len(problems): break
-				if problems[i] != '' and not 'added' in page.lower():
-					assigned_problems_string += '#' + problems[i] + '; '
-			
-			print(assigned_problems_string)
 			print('\n')
-			print(output[0].get('content')[0].get('startIndex'))
-			print(output[0].get('content')[0].get('endIndex') - 1)
-			print(output[1].get('content')[0].get('startIndex'))
-			print(output[1].get('content')[0].get('endIndex') - 1)
 
-
-			request1 = [ 	# requests are in order where index is higher because changing higher indexes don't affect lower ones
-							# if it were left to right (lower index to high), the indexes would have to be recalculated for each change
-				{
-					'deleteContentRange': {
-						'range': {
-							'startIndex': output[2].get('content')[2].get('startIndex'),
-							'endIndex': output[2].get('content')[2].get('endIndex') - 1,
-						}
-					}
-				},
-				{
-					'insertText': {
-						'location': {
-							'index': output[2].get('content')[2].get('startIndex')
-						},
-						'text': due_date
-					}
-				},
-
-				{
-					'deleteContentRange': {
-						'range': {
-							'startIndex': output[1].get('content')[0].get('startIndex'),
-							'endIndex': output[1].get('content')[0].get('endIndex') - 1,
-						}
-					}
-				},
-				{
-					'insertText': {
-						'location': {
-							'index': output[1].get('content')[0].get('startIndex')
-						},
-						'text': assigned_problems_string
-					}
-				},
-
-				{
-					'deleteContentRange': {
-						 'range': {
-							'startIndex': output[0].get('content')[0].get('startIndex'),
-							'endIndex': output[0].get('content')[0].get('endIndex') - 1,
- 						}
-					}
-				},
-				{
-					'insertText': {
-						'location': {
-							'index': output[0].get('content')[0].get('startIndex')
-						},
-						'text': "HW " + hw_string
-					}
-				},
-			]
-			
-			result = service.documents().batchUpdate(
-				documentId=TEMPLATE_ID, body={'requests': request1}
-			).execute()
-			
-			print(result)
+			send_to_docs(service, output, due_date, assigned_problems_string, hw_string)
 			break
 
 def auth():
@@ -241,9 +165,6 @@ def get_problems(assignment_problems):
 	problems = []
 
 	for problem in assignment_problems:
-		with open('output.json', 'w') as path:
-			path.write(json.dumps(problem, indent=4))
-
 		problem = problem.get('paragraph').get('elements')[0]
 		if not 'textRun' in problem.keys():
 			return [problems, due_date]
@@ -259,6 +180,77 @@ def get_problems(assignment_problems):
 			problems.append(problem.strip('\n'))
 
 	return [problems, due_date]
+
+def construct_assigned_problems_string(pages, problems):
+	assigned_problems_string = ''
+	for i, page in enumerate(pages):
+		assigned_problems_string += page + ' '
+		if i >= len(problems): break
+		if problems[i] != '' and not 'added' in page.lower():
+			assigned_problems_string += '#' + problems[i] + '; '
+	
+	return assigned_problems_string
+
+def send_to_docs(service, output, due_date, assigned_problems_string, hw_string):
+	request = [ 	# requests are in order where index is higher because changing higher indexes don't affect lower ones
+					# if it were left to right (lower index to high), the indexes would have to be recalculated for each change
+		{
+			'deleteContentRange': {
+				'range': {
+					'startIndex': output[2].get('content')[2].get('startIndex'),
+					'endIndex': output[2].get('content')[2].get('endIndex') - 1,
+				}
+			}
+		},
+		{
+			'insertText': {
+				'location': {
+					'index': output[2].get('content')[2].get('startIndex')
+				},
+				'text': due_date
+			}
+		},
+
+		{
+			'deleteContentRange': {
+				'range': {
+					'startIndex': output[1].get('content')[0].get('startIndex'),
+					'endIndex': output[1].get('content')[0].get('endIndex') - 1,
+				}
+			}
+		},
+		{
+			'insertText': {
+				'location': {
+					'index': output[1].get('content')[0].get('startIndex')
+				},
+				'text': assigned_problems_string
+			}
+		},
+
+		{
+			'deleteContentRange': {
+					'range': {
+					'startIndex': output[0].get('content')[0].get('startIndex'),
+					'endIndex': output[0].get('content')[0].get('endIndex') - 1,
+				}
+			}
+		},
+		{
+			'insertText': {
+				'location': {
+					'index': output[0].get('content')[0].get('startIndex')
+				},
+				'text': "HW " + hw_string
+			}
+		},
+	]
+
+	result = service.documents().batchUpdate(
+		documentId=TEMPLATE_ID, body={'requests': request}
+	).execute()
+
+	print(result)
 
 if __name__ == '__main__':
 	main()
