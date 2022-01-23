@@ -1,7 +1,7 @@
-# run from \mathHomeworkFormatter with "py mathHomeworkFormatter.py"
+# run from \mathHomeworkFormatter with "py mathHomeworkFormatter.py hw number"
+# example: py mathHomeworkFormatter.py 46
 # document link: https://docs.google.com/document/d/165mIRq4syA7NC_nO68JdFFPzLVHQlKpZaW8_-Fmeaz8/edit
 
-#bglhlhkhljk
 from __future__ import print_function
 
 import os.path
