@@ -60,12 +60,11 @@ def main():
 			due_date = problems[1]
 			problems = problems[0]
 			assigned_problems_string = construct_assigned_problems_string(pages, problems)
-
-			print("HW " + hw_string)
-			print(due_date)
-			print(pages)
-			print(problems)
-			print('\n')
+			# print("HW " + hw_string)
+			# print(due_date)
+			# print(pages)
+			# print(problems)
+			# print('\n')
 
 			send_to_docs(service, output, due_date, assigned_problems_string, hw_string)
 			break
@@ -252,7 +251,8 @@ def send_to_docs(service, output, due_date, assigned_problems_string, hw_string)
 		documentId=TEMPLATE_ID, body={'requests': request}
 	).execute()
 
-	print(result)
+	# print(result)
+	print('done')
 
 if __name__ == '__main__':
 	main()
